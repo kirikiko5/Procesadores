@@ -16,8 +16,10 @@ parser code
 	boolean isRnd = false;
 	boolean isData = false;
 	
+
 	static HashMap<String, Object> tablaSimbolos = new HashMap<String, Object> ();
-	ArrayList<String> listaTokens = new ArrayList<String>();
+
+
 	ArrayList<Integer> numerosLinea = new ArrayList<Integer>();
 
 	public static void main (String argsv[]) throws Exception {
@@ -40,8 +42,9 @@ parser code
 	    		//if (parser.isSorted()) {
 		    		System.out.println("Analisis realizado correctamente");
 		    		System.out.println("Lista de Tokens identificados");
-		    		parser.printToken();
-		    		parser.print();
+		    		//parser.printToken();
+		    		lexico.pintarLexemas();
+		    		parser.mostrarTabla();
 		    	/*} else {
 		    		System.out.println("Los numeros de linea estan mal numerados");
 		    	}*/
@@ -49,9 +52,6 @@ parser code
 	    		System.out.println("Hay errores en el codigo");
 	    		System.out.println("Errores sintacticos: " + parser.err_sintactico);
 	    		System.out.println("Errores semanticos: " + parser.err_semantico);
-	    		System.out.println("Lista de Tokens identificados");
-	    		parser.printToken();
-	    		parser.print();
 	    	}
     	}
 
@@ -66,43 +66,40 @@ parser code
   		return tablaSimbolos;
   	}
 
-  	public void print() {
-  		System.out.println("");
-  		System.out.println("   ::: TABLA DE SIMBOLOS :::    ");	
+	
+	public ArrayList getLinea() {
+		return numerosLinea;
+	}
+
+	  public void mostrarTabla(){
+	  
+	  	System.out.println("    TABLA DE SIMBOLOS     ");	
 	  	System.out.println("--------------------------------");
-	  	System.out.println("Tamaño de la tabla de simbolos: " + tablaSimbolos.size());
 		Iterator itert = tablaSimbolos.entrySet().iterator();
 		while (itert.hasNext()) {
 	    	Map.Entry entry = (Map.Entry)itert.next();
 	    	System.out.println(entry.getKey()); 
 		}
-	  	System.out.println("--------------------------------");	
-  	}
-
-	public ArrayList getListaToken() {
-		return listaTokens;
-	}
+	  	System.out.println("--------------------------------");
+	  	
+	  }
 	
-	public ArrayList getLinea() {
-		return numerosLinea;
-	}
-	
-	public void printToken() {
-		int i = 0;
-		while(i < getListaToken().size()) {
-			if (i%6 == 0) {
-				System.out.println("");
-			}
-			System.out.print(getListaToken().get(i) + "\t");
-			i++;
-		}
-		System.out.println("");
-	}
 	
 	public boolean isSorted() {
-	    boolean sorted = true;        
-	    for (int i = 1; i < numerosLinea.size(); i++) {
-	        if (numerosLinea.get(i-1).compareTo(numerosLinea.get(i)) != 1) sorted = false;
+	    boolean sorted = true;
+	    int i = 1;
+	    int actual;
+	    int anterior = numerosLinea.get(0);  
+
+	    while(i < numerosLinea.size()) {
+	    	actual = numerosLinea.get(i);
+	    	System.out.print(actual + "\n");
+	    	if(!(actual > anterior)) {
+	    		System.out.print("Aqui");
+	    		sorted = false;
+	    	}
+	    	anterior = actual;
+	    	i++;
 	    }
 	    return sorted;
 	}
@@ -134,7 +131,7 @@ action code
 :}
 
 terminal		TK_DATA, TK_DEF, TK_DIM, TK_END, TK_FOR, TK_GO, TK_GOSUB, TK_GOTO, TK_IF;
-terminal		TK_INPUT, TK_LET, TK_NEXT, TK_ON, TK_PRINT, TK_RANDOMIZE, TK_READ, TK_REM, TK_RESTORE;
+terminal		TK_INPUT, TK_LET, TK_NEXT, TK_ON, TK_PRINT, TK_RANDOMIZE, TK_READ, TK_RESTORE;
 terminal		TK_RETURN, TK_STEP, TK_STOP, TK_THEN, TK_TO, TK_ABS, TK_ATN, TK_COS, TK_EXP, TK_INT;
 terminal		TK_LOG, TK_RND, TK_SGN, TK_SIN, TK_SQR, TK_TAN, TK_ID, TK_INT_SIM, TK_INT_SUS, TK_FN; 
 terminal		TK_PAR_IZQ, TK_PAR_DER;
@@ -144,8 +141,8 @@ terminal		TK_SUMA, TK_RESTA, TK_MUL, TK_DIV, TK_EL;
 terminal		TK_DIG, TK_CADENA;
 
 non terminal	abs, atn, cos, exp, int, log, rnd, sgn, sin, sqr, tan;
-non terminal 	let, for, condicional, print, input, data, c_data, read, dim, def, gosub, randomize, restore, go, on;
-non terminal	comparacion, operador;
+non terminal 	let, for, condicional, print, input, data, c_data, read, dim, c_dim, def, gosub, randomize, restore, go, on;
+non terminal	comparacion, operador, numerico, cadena;
 non terminal	dato, expresion, next, goto;
 non terminal	programa, bloque, funcion, linea, fin;
 
@@ -157,78 +154,97 @@ linea::= TK_DIG:token funcion {:
 			String aux = token.toString();
 			int valor = Integer.parseInt(aux);
 			parser.getLinea().add(valor);
-			parser.getListaToken().add(token.toString());
+			
 		:} | error;
 
 fin::= TK_DIG:token TK_END:token2 {:
 			String aux = token.toString();
 			int valor = Integer.parseInt(aux);
 			parser.getLinea().add(valor);
-			parser.getListaToken().add(token.toString());
-			parser.getListaToken().add(token2.toString());
+			
 		:} | TK_DIG:token TK_STOP:token2 {:
 			String aux = token.toString();
 			int valor = Integer.parseInt(aux);
 			parser.getLinea().add(valor);
-			parser.getListaToken().add(token.toString());
-			parser.getListaToken().add(token2.toString());
+			
 		:};
 
 funcion::= abs | tan | sqr | sin | sgn | rnd | log | int | exp | cos | atn | for | condicional | let | 
 		   print | input | goto | data | read | dim | def | gosub | randomize | restore | on | go;
 
 //Comienzo de estructuras de control
-condicional::= TK_IF dato comparacion TK_CADENA TK_THEN dato {:
+condicional::= TK_IF:token cadena comparacion cadena TK_THEN:token2 numerico {:
+				
+				:}| TK_IF:token cadena comparacion cadena TK_THEN:token2 goto {:
 
-				:}| TK_IF dato comparacion TK_CADENA TK_THEN goto {:
-				:} | TK_IF dato comparacion dato TK_THEN dato {:
-				:} | TK_IF dato comparacion dato TK_THEN goto {:
-				:} | TK_IF dato comparacion expresion TK_THEN dato {:
-				:} | TK_IF dato comparacion expresion TK_THEN goto {:
+				:} | TK_IF:token cadena comparacion expresion TK_THEN:token2 numerico {:
+
+				:} | TK_IF:token cadena comparacion expresion TK_THEN:token2 goto {:
+
+				:} | TK_IF:token numerico comparacion numerico TK_THEN:token2 numerico {:
+
+				:} | TK_IF:token numerico comparacion numerico TK_THEN:token2 goto {:
+
+				:} | TK_IF:token numerico comparacion expresion TK_THEN:token2 numerico {:
+
+				:} | TK_IF:token numerico comparacion expresion TK_THEN:token2 goto {:
+
+				:} | TK_IF:token expresion comparacion numerico TK_THEN:token2 numerico {:
+
+				:} | TK_IF:token expresion comparacion numerico TK_THEN:token2 goto {:
+
+				:} | TK_IF:token expresion comparacion expresion TK_THEN:token2 numerico {:
+
+				:} | TK_IF:token expresion comparacion expresion TK_THEN:token2 goto {:
+
 				:};
+
+numerico::= TK_DIG:token {:
+				String aux = token.toString();
+				if(aux.contains(",")) {
+					if(aux.length()>8){
+						System.out.println("Error en " + aux + " Maximo 6 cifras decimales");
+						parser.err_semantico++;
+					}
+				}
+				
+		:} | TK_INT_SIM:token {:
+				parser.check(token);
+				
+		:} | TK_INT_SUS:token {:
+				parser.check(token);
+				
+		:};
+
+cadena::= TK_CADENA:token {:
+				String aux = token.toString();
+				if(aux.length()>18) {
+					System.out.println("Error en " + aux + " Maximo 18 caracteres");
+					parser.err_semantico++;
+				}
+		:}| TK_ID:token {:
+				parser.check(token);
+				
+		:};
 
 //Funcion For
 for::= TK_FOR:token TK_INT_SIM:token2 TK_IGUAL:token3 TK_DIG:token4 TK_TO:token5 TK_INT_SIM:token6 bloque next {:
 			parser.declarar(token2);
 			parser.declarar(token6);
-			parser.getListaToken().add(token.toString());
-			parser.getListaToken().add(token2.toString());
-			parser.getListaToken().add(token3.toString());
-			parser.getListaToken().add(token4.toString());
-			parser.getListaToken().add(token5.toString());
-			parser.getListaToken().add(token6.toString());
+			
 			
 		:} | TK_FOR:token TK_INT_SIM:token2 TK_IGUAL:token3 TK_DIG:token4 TK_TO:token5 TK_DIG:token6 bloque next {:
 			parser.declarar(token2);
-			parser.getListaToken().add(token.toString());
-			parser.getListaToken().add(token2.toString());
-			parser.getListaToken().add(token3.toString());
-			parser.getListaToken().add(token4.toString());
-			parser.getListaToken().add(token5.toString());
-			parser.getListaToken().add(token6.toString());
+			
 			
 		:} | TK_FOR:token TK_INT_SIM:token2 TK_IGUAL:token3 TK_DIG:token4 TK_TO:token5 TK_INT_SIM:token6 TK_STEP:token7 TK_DIG:token8 bloque next {:
 			parser.declarar(token2);
 			parser.declarar(token6);
-			parser.getListaToken().add(token.toString());
-			parser.getListaToken().add(token2.toString());
-			parser.getListaToken().add(token3.toString());
-			parser.getListaToken().add(token4.toString());
-			parser.getListaToken().add(token5.toString());
-			parser.getListaToken().add(token6.toString());
-			parser.getListaToken().add(token7.toString());
-			parser.getListaToken().add(token8.toString());
+			
 			
 		:} | TK_FOR:token TK_INT_SIM:token2 TK_IGUAL:token3 TK_DIG:token4 TK_TO:token5 TK_DIG:token6 TK_STEP:token7 TK_DIG:token8 bloque next {:
 			parser.declarar(token2);
-			parser.getListaToken().add(token.toString());
-			parser.getListaToken().add(token2.toString());
-			parser.getListaToken().add(token3.toString());
-			parser.getListaToken().add(token4.toString());
-			parser.getListaToken().add(token5.toString());
-			parser.getListaToken().add(token6.toString());
-			parser.getListaToken().add(token7.toString());
-			parser.getListaToken().add(token8.toString());
+			
 		:};
 
 next::= TK_DIG:token TK_NEXT:token2 TK_INT_SIM:token3 {:
@@ -236,31 +252,25 @@ next::= TK_DIG:token TK_NEXT:token2 TK_INT_SIM:token3 {:
 		String aux = token.toString();
 		int valor = Integer.parseInt(aux);
 		parser.getLinea().add(valor);
-		parser.getListaToken().add(token.toString());
-		parser.getListaToken().add(token2.toString());
-		parser.getListaToken().add(token3.toString());
+		
 	:};
 
 //Funcion let
 let::= TK_LET:token TK_ID:dat TK_IGUAL:token2 expresion {:
 				parser.declarar(dat);
-				parser.getListaToken().add(token.toString());
-				parser.getListaToken().add(token2.toString());
-		:} | TK_LET:token TK_INT_SIM:dat TK_IGUAL:token2 TK_CADENA:token3 {:
+
+		:} | TK_LET:token TK_ID:dat TK_IGUAL:token2 TK_CADENA {:
 				parser.declarar(dat);
-				parser.getListaToken().add(token.toString());
-				parser.getListaToken().add(token2.toString());
-				parser.getListaToken().add("Cadena");
-		:} | TK_LET:token TK_INT_SUS:dat TK_IGUAL:token2 TK_CADENA:token3 {:
+				
+		:} | TK_LET:token TK_INT_SIM:dat TK_IGUAL:token2 numerico {:
 				parser.declarar(dat);
-				parser.getListaToken().add(token.toString());
-				parser.getListaToken().add(token2.toString());
-				parser.getListaToken().add("Cadena");
+
+		:} | TK_LET:token TK_INT_SUS:dat TK_IGUAL:token2 numerico {:
+				parser.declarar(dat);
 		:};
 		
 //Funcion read
 read::= TK_READ:token c_data {:
-			parser.getListaToken().add(token.toString());
 			if (!parser.isData) {
 				System.out.println("Se necesita una declaracion previa de DATA");
 				parser.err_semantico++;
@@ -269,7 +279,6 @@ read::= TK_READ:token c_data {:
 		:};
 
 restore::= TK_RESTORE:token {:
-			parser.getListaToken().add(token.toString());
 			if (!parser.isRead) {
 				System.out.println("No se ha encontrado la instruccion READ");
 				parser.err_semantico++;
@@ -278,35 +287,25 @@ restore::= TK_RESTORE:token {:
 	
 //Funcion Data
 data::= TK_DATA:token c_data {:
-			parser.getListaToken().add(token.toString());
 			parser.isData = true;
 		:};
 
 c_data::= TK_ID:dat {:
-			parser.getListaToken().add(dat.toString());
 			parser.declarar(dat);
 			
 		:} | TK_INT_SIM:dat {:
-			parser.getListaToken().add(dat.toString());
 			parser.declarar(dat);
 			
 		:} | TK_INT_SUS:dat {:
-			parser.getListaToken().add(dat.toString());
 			parser.declarar(dat);
 			
 		:} | TK_ID:dat TK_COMA:token c_data {:
-			parser.getListaToken().add(token.toString());
-			parser.getListaToken().add(dat.toString());
 			parser.declarar(dat);
 			
 		:} | TK_INT_SIM:dat TK_COMA:token c_data {:
-			parser.getListaToken().add(token.toString());
-			parser.getListaToken().add(dat.toString());
 			parser.declarar(dat);
 			
 		:} | TK_INT_SUS:dat TK_COMA:token c_data {:
-			parser.getListaToken().add(token.toString());
-			parser.getListaToken().add(dat.toString());
 			parser.declarar(dat);
 			
 		:};
@@ -315,83 +314,53 @@ c_data::= TK_ID:dat {:
 //Funcion Print
 print::= TK_PRINT:token TK_CADENA:token2 TK_PUNTOCOMA:token3 TK_ID:token4 {:
 				parser.check(token4);
-				parser.getListaToken().add(token.toString());
-				parser.getListaToken().add(token2.toString());
-				parser.getListaToken().add(token3.toString());
-				parser.getListaToken().add(token4.toString());
-		:} | TK_PRINT:token TK_CADENA:token2 TK_PUNTOCOMA:token3 {:
-				parser.getListaToken().add(token.toString());
-				parser.getListaToken().add(token2.toString());
-				parser.getListaToken().add(token3.toString());
+
+		:} | TK_PRINT:token TK_CADENA:token2 {:
+
 		:} | TK_PRINT:token dato {:
-				parser.getListaToken().add(token.toString());
+
 		:};
 
 //Funcion Input		
 input::= TK_INPUT:token TK_CADENA:token2 TK_PUNTOCOMA:token3 TK_ID:token4 {:
 				parser.check(token4);
-				parser.getListaToken().add(token.toString());
-				parser.getListaToken().add(token2.toString());
-				parser.getListaToken().add(token3.toString());
-				parser.getListaToken().add(token4.toString());
 		:} | TK_INPUT:token TK_CADENA:token2 TK_PUNTOCOMA:token3 {:
-				parser.getListaToken().add(token.toString());
-				parser.getListaToken().add(token2.toString());
-				parser.getListaToken().add(token3.toString());
 		:};
 
 //Funcion Dim
-dim::= TK_DIM:token TK_INT_SUS:token2 {:
-			parser.declarar(token2);
-			parser.getListaToken().add(token.toString());
-			parser.getListaToken().add(token2.toString());
-		:};
+dim::= TK_DIM c_dim;
+
+c_dim::= TK_INT_SIM:token  {:
+			parser.declarar(token);
+	:} | TK_INT_SUS:token {:
+			parser.declarar(token);
+	:} | c_dim TK_COMA TK_INT_SIM:token {:
+			parser.declarar(token);
+	:} | c_dim TK_COMA TK_INT_SUS:token {:
+			parser.declarar(token);
+	:};
 
 //Funcion goto		
 goto::= TK_GOTO:token TK_DIG:token2 {:
-		parser.declarar(token2);
-		parser.getListaToken().add(token.toString());
-		parser.getListaToken().add(token2.toString());
 	:};
 
 //Funcion Def
 def::= TK_DEF:token TK_FN:token2 TK_INT_SIM:token7 TK_PAR_IZQ:token5 TK_INT_SIM:token3 TK_PAR_DER:token6 TK_IGUAL:token4 dato {:
 			parser.check(token3);
-			parser.getListaToken().add(token.toString());
-			parser.getListaToken().add(token2.toString());
-			parser.getListaToken().add(token3.toString());
-			parser.getListaToken().add(token4.toString());
-			parser.getListaToken().add(token5.toString());
-			parser.getListaToken().add(token6.toString());
-			parser.getListaToken().add(token7.toString());
 
-		:}| TK_DEF:token TK_FN:token2 TK_INT_SUS:token3 TK_IGUAL:token4 expresion {:
+		:}| TK_DEF:token TK_FN:token2 TK_INT_SIM:token3 TK_IGUAL:token4 expresion {:
 			parser.check(token3);
-			parser.getListaToken().add(token.toString());
-			parser.getListaToken().add(token2.toString());
-			parser.getListaToken().add(token3.toString());
-			parser.getListaToken().add(token4.toString());
 
 		:} | TK_DEF:token TK_FN:token2 TK_INT_SIM:token7 TK_PAR_IZQ:token5 TK_INT_SIM:token3 TK_PAR_DER:token6 TK_IGUAL:token4 expresion {:
 			parser.check(token3);
-			parser.getListaToken().add(token.toString());
-			parser.getListaToken().add(token2.toString());
-			parser.getListaToken().add(token3.toString());
-			parser.getListaToken().add(token4.toString());
-			parser.getListaToken().add(token5.toString());
-			parser.getListaToken().add(token6.toString());
-			parser.getListaToken().add(token7.toString());
 		:};
 	   
 //Funcion Gosub
 gosub::= TK_GOSUB:token dato bloque TK_RETURN:token2 {:
-			parser.getListaToken().add(token.toString());
-			parser.getListaToken().add(token2.toString());
 		:};
 
 //Funcion randomize
 randomize::= TK_RANDOMIZE:token {:
-			parser.getListaToken().add(token.toString());
 			if(!parser.isRnd) {
 				System.out.println("No se ha encontrado la instruccion RND");
 				System.out.println("Para usar esta funcion se necesita una invocacion previa de la funcion RND");
@@ -399,136 +368,141 @@ randomize::= TK_RANDOMIZE:token {:
 			} 
 		:};
 
-on::= TK_ON:token {:
-		parser.getListaToken().add(token.toString());
+on::= TK_ON {:
 	:};
 	
-go::= TK_GO:token {:
-		parser.getListaToken().add(token.toString());
+go::= TK_GO {:
 	:};
 
 
 
-expresion::= dato:dat operador dato {:
-			:} | expresion operador dato {:
+expresion::= TK_INT_SIM:token operador TK_DIG:token2 {:
+					parser.check(token);
 
-			:} | dato operador TK_CADENA {:
+			:} | TK_INT_SUS:token operador TK_DIG:token2 {:
+					parser.check(token);
+			
+			:} | TK_DIG:token operador TK_INT_SIM:token2 {:
+					parser.check(token2);
+			
+			:} | TK_DIG:token operador TK_INT_SUS:token2 {:
+					parser.check(token2);
+			
+			:} | TK_INT_SIM:token operador TK_INT_SUS:token2 {:
+					parser.check(token);
+					parser.check(token2);
+			
+			:} | TK_INT_SUS:token operador TK_INT_SIM:token2 {:
+					parser.check(token);
+					parser.check(token2);
 
+			:} | TK_ID:token operador TK_CADENA:token2 {:
+					parser.check(token);
+
+			:} | TK_CADENA operador TK_ID:token2 {:
+					parser.check(token2);
+			
+			:} | expresion operador TK_DIG {:
+			
+			:} | expresion operador TK_INT_SIM:token {:
+					parser.check(token);
+			
+			:} | expresion operador TK_INT_SUS:token {:
+					parser.check(token);
+			
+			:} | expresion operador TK_ID:token {:
+					parser.check(token);
+			
+			:} | expresion operador TK_CADENA {:
+			
 			:};
 
 
-
-
 //Funciones predefinidas
-abs::= TK_ABS:token TK_PAR_IZQ:token2 dato TK_PAR_DER:token3 {:
-		parser.getListaToken().add(token.toString());
-		parser.getListaToken().add(token2.toString());
-		parser.getListaToken().add(token3.toString());
+abs::= TK_ABS TK_PAR_IZQ numerico TK_PAR_DER {:
 	:};
 
-tan::= TK_TAN:token TK_PAR_IZQ:token2 dato TK_PAR_DER:token3 {:
-		parser.getListaToken().add(token.toString());
-		parser.getListaToken().add(token2.toString());
-		parser.getListaToken().add(token3.toString());
+tan::= TK_TAN TK_PAR_IZQ numerico TK_PAR_DER {:
 	:};
 
-sqr::= TK_SQR:token TK_PAR_IZQ:token2 dato TK_PAR_DER:token3 {:
-		parser.getListaToken().add(token.toString());
-		parser.getListaToken().add(token2.toString());
-		parser.getListaToken().add(token3.toString());
+sqr::= TK_SQR TK_PAR_IZQ TK_DIG:token TK_PAR_DER {:
+			String aux = token.toString();
+			if(aux.contains("-")) {
+				System.out.println("El valor introducido tiene que ser mayor que 0");
+				parser.err_semantico++;
+			}
+	:} | TK_SQR TK_PAR_IZQ TK_INT_SIM TK_PAR_DER 
+
+	   | TK_SQR TK_INT_SUS;
+
+
+
+log::= TK_LOG TK_PAR_IZQ TK_DIG:token TK_PAR_DER {:
+			String aux = token.toString();
+			if(aux.contains("-")) {
+				System.out.println("El valor introducido tiene que ser mayor que 0");
+				parser.err_semantico++;
+			} else {
+				int valor = Integer.parseInt(aux);
+				if (valor <= 0) {
+					System.out.println("El valor introducido no puede ser 0");
+					parser.err_semantico++;
+				}
+			} 
+
+	:} | TK_LOG TK_PAR_IZQ TK_INT_SIM TK_PAR_DER 
+
+	   | TK_LOG TK_INT_SUS;
+
+sin::= TK_SIN TK_PAR_IZQ numerico TK_PAR_DER {:
 	:};
 
-sin::= TK_SIN:token TK_PAR_IZQ:token2 dato TK_PAR_DER:token3 {:
-		parser.getListaToken().add(token.toString());
-		parser.getListaToken().add(token2.toString());
-		parser.getListaToken().add(token3.toString());
+sgn::= TK_SGN TK_PAR_IZQ numerico TK_PAR_DER {:
 	:};
 
-sgn::= TK_SGN:token TK_PAR_IZQ:token2 dato TK_PAR_DER:token3 {:
-		parser.getListaToken().add(token.toString());
-		parser.getListaToken().add(token2.toString());
-		parser.getListaToken().add(token3.toString());
-	:};
-
-rnd::= TK_RND:token TK_PAR_IZQ:token2 dato TK_PAR_DER:token3 {:
+rnd::= TK_RND TK_PAR_IZQ numerico TK_PAR_DER {:
 		parser.isRnd = true;
-		parser.getListaToken().add(token.toString());
-		parser.getListaToken().add(token2.toString());
-		parser.getListaToken().add(token3.toString());
    	:};
 
-log::= TK_LOG:token TK_PAR_IZQ:token2 dato:dat TK_PAR_DER:token3{:
-		parser.getListaToken().add(token.toString());
-		parser.getListaToken().add(token2.toString());
-		parser.getListaToken().add(token3.toString());
+int::= TK_INT TK_PAR_IZQ numerico TK_PAR_DER{:
 	:};
 
-int::= TK_INT:token TK_PAR_IZQ:token2 dato TK_PAR_DER:token3{:
-		parser.getListaToken().add(token.toString());
-		parser.getListaToken().add(token2.toString());
-		parser.getListaToken().add(token3.toString());
+exp::= TK_EXP TK_PAR_IZQ numerico TK_PAR_DER {:
 	:};
 
-exp::= TK_EXP:token TK_PAR_IZQ:token2 dato TK_PAR_DER:token3 {:
-		parser.getListaToken().add(token.toString());
-		parser.getListaToken().add(token2.toString());
-		parser.getListaToken().add(token3.toString());
+cos::= TK_COS TK_PAR_IZQ numerico TK_PAR_DER {:
 	:};
 
-cos::= TK_COS:token TK_PAR_IZQ:token2 dato TK_PAR_DER:token3 {:
-		parser.getListaToken().add(token.toString());
-		parser.getListaToken().add(token2.toString());
-		parser.getListaToken().add(token3.toString());
-	:};
-
-atn::= TK_ATN:token TK_PAR_IZQ:token2 dato TK_PAR_DER:token3 {:
-		parser.getListaToken().add(token.toString());
-		parser.getListaToken().add(token2.toString());
-		parser.getListaToken().add(token3.toString());
+atn::= TK_ATN TK_PAR_IZQ numerico TK_PAR_DER {:
 	:};
 
 
 //Operadores
-comparacion::= TK_MENOR:token {:
-					parser.getListaToken().add(token.toString());
-			:} | TK_MAYOR:token {:
-					parser.getListaToken().add(token.toString());
-			:} | TK_MAYOR_IGUAL:token {:
-					parser.getListaToken().add(token.toString());
-			:} | TK_MENOR_IGUAL:token {:
-					parser.getListaToken().add(token.toString());
-			:} | TK_DISTINTO:token {:
-					parser.getListaToken().add(token.toString());
-			:} | TK_IGUAL:token {:
-					parser.getListaToken().add(token.toString());
+comparacion::= TK_MENOR {:
+			:} | TK_MAYOR {:
+			:} | TK_MAYOR_IGUAL {:
+			:} | TK_MENOR_IGUAL {:
+			:} | TK_DISTINTO {:
+			:} | TK_IGUAL {:
 			:};
 
 				
-operador::= TK_SUMA:token {:
-					parser.getListaToken().add(token.toString());
-			:} | TK_RESTA:token {:
-					parser.getListaToken().add(token.toString());
-			:} | TK_MUL:token {:
-					parser.getListaToken().add(token.toString());
-			:} | TK_DIV:token {:
-					parser.getListaToken().add(token.toString());
-			:} | TK_EL:token {:
-					parser.getListaToken().add(token.toString());
+operador::= TK_SUMA {:
+			:} | TK_RESTA {:
+			:} | TK_MUL {:
+			:} | TK_DIV {:
+			:} | TK_EL {:
 			:};
 
 //Unidad minima de informacion, el dato y la constante.
 dato::= TK_ID:dat {:
-			parser.getListaToken().add(dat.toString());
 			parser.check(dat);
 			
 		:} | TK_INT_SIM:dat {:
-			parser.getListaToken().add(dat.toString());
 			parser.check(dat);
 			
 		:} | TK_INT_SUS:dat {:
-			parser.getListaToken().add(dat.toString());
 			parser.check(dat);
 			
-		:} | TK_DIG:dat {:
-			parser.getListaToken().add(dat.toString());
+		:} | TK_DIG {:
 		:};
